@@ -16,7 +16,7 @@ import com.google.android.gms.maps.model.LatLng;
 // IMPLEMENTAR dicho método en esta actividad.
 
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener,
-        NuevoReclamoFragment.OnNuevoLugarListener, MapaFragment.OnMapaListener {
+        NuevoReclamoFragment.OnNuevoLugarListener, MapaFragment.OnMapaListener, BuscarPorTipoFragment.OnTipoBusquedaListener {
     private DrawerLayout drawerLayout;
     private NavigationView navView;
 
@@ -91,6 +91,16 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
                                 args2.putInt("tipo_mapa",4);
                                 fragment.setArguments(args2);
 
+
+                                fragmentTransaction = true;
+                                break;
+                            case R.id.optbusq:
+                                tag = "BuscarPorTipoFragment";
+                                fragment =  getSupportFragmentManager().findFragmentByTag(tag);
+                                if(fragment==null) {
+                                    fragment = new BuscarPorTipoFragment();
+                                    ((BuscarPorTipoFragment) fragment).setListener(MainActivity.this);
+                                }
 
                                 fragmentTransaction = true;
                                 break;
@@ -200,9 +210,28 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         }
 
 
+    @Override
+    public void mostrarBusquedaTipo(String tipoReclamo) {
+        Fragment fragment = null;
+        String tag = "";
+        tag="mapaReclamos";
+        fragment =  getSupportFragmentManager().findFragmentByTag(tag);
+
+        if(fragment==null) {
+            fragment = new MapaFragment();
+            // configurar a la actividad como listener de los eventos del mapa ((MapaFragment) fragment).setListener(this);
+            ((MapaFragment) fragment).setListener(MainActivity.this);
+        }
+        Bundle args = new Bundle();
+        args.putInt("tipo_mapa",5);
+        args.putString( "tipo_reclamo",tipoReclamo);
+        fragment.setArguments(args);
 
 
-
-
-
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.contenido, fragment,tag)
+                .addToBackStack(null)
+                .commit();
+    }
 }
