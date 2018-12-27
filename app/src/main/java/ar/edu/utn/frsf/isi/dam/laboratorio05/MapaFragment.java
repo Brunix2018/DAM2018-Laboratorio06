@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 
@@ -43,6 +44,7 @@ public class MapaFragment extends SupportMapFragment implements OnMapReadyCallba
     private GoogleMap miMapa;
     private int tipoMapa;
     private int idReclamo;
+    private String tipoReclamo;
     private ReclamoDao reclamoDao;
     private List<Reclamo> listaReclamos;
     private Reclamo reclamo;
@@ -98,6 +100,7 @@ public class MapaFragment extends SupportMapFragment implements OnMapReadyCallba
                 savedInstanceState);
         tipoMapa = 0;
         idReclamo= 0;
+        tipoReclamo = "";
         lista = new ArrayList<>();
 
 
@@ -106,6 +109,7 @@ public class MapaFragment extends SupportMapFragment implements OnMapReadyCallba
         if (argumentos != null) {
             tipoMapa = argumentos.getInt("tipo_mapa", 0);
             idReclamo = argumentos.getInt("idReclamo", 0);
+            tipoReclamo = argumentos.getString("tipo_reclamo", "");
         }
 
 
@@ -251,6 +255,48 @@ public class MapaFragment extends SupportMapFragment implements OnMapReadyCallba
 
                 Thread t3 = new Thread(hiloCargaCalor);
                 t3.start();
+                break;
+            case 5:
+                Runnable hiloCargaReclamo = new Runnable() {
+                    @Override
+                    public void run() {
+                        listaReclamos = reclamoDao.getByTipo(tipoReclamo);
+
+
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                PolylineOptions rectOptions = new PolylineOptions();
+                                for (Reclamo unReclamo : listaReclamos){
+                                    LatLng posicion = new LatLng(unReclamo.getLatitud(),unReclamo.getLongitud());
+                                    miMapa.addMarker(new MarkerOptions().position(posicion)
+                                            .title(String.valueOf(unReclamo.getId()))
+                                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+                                    builder.include(posicion);
+                                    rectOptions.add(posicion).color(Color.BLUE);
+
+                                }
+
+                                int padding = 50;
+                                LatLngBounds bounds = builder.build();
+                                miMapa.addPolyline(rectOptions);
+                                cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+                                miMapa.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+                                    @Override
+                                    public void onMapLoaded() {
+                                        miMapa.animateCamera(cu);
+                                    }
+                                });
+
+                            }
+                        });
+
+                    }
+                };
+
+                Thread t4 = new Thread(hiloCargaReclamo);
+                t4.start();
                 break;
         }
 
