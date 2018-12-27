@@ -25,6 +25,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.heatmaps.HeatmapTileProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +48,7 @@ public class MapaFragment extends SupportMapFragment implements OnMapReadyCallba
     private Reclamo reclamo;
     private LatLngBounds.Builder builder;
     private CameraUpdate cu;
-
+    private ArrayList<LatLng> lista;
 
 
 
@@ -96,6 +98,8 @@ public class MapaFragment extends SupportMapFragment implements OnMapReadyCallba
                 savedInstanceState);
         tipoMapa = 0;
         idReclamo= 0;
+        lista = new ArrayList<>();
+
 
 
         Bundle argumentos = getArguments();
@@ -207,7 +211,47 @@ public class MapaFragment extends SupportMapFragment implements OnMapReadyCallba
                 Thread t2 = new Thread(hiloMostarReclamo);
                 t2.start();
                 break;
+            case 4:
+                Runnable hiloCargaCalor = new Runnable() {
+                    @Override
+                    public void run() {
+                        listaReclamos = reclamoDao.getAll();
 
+
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                for (Reclamo unReclamo : listaReclamos){
+                                    LatLng posicion = new LatLng(unReclamo.getLatitud(),unReclamo.getLongitud());
+                                    lista.add(posicion);
+                                    builder.include(posicion);
+
+                                }
+                                HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder().data(lista)
+                                        .radius(50)
+                                        .build();
+                                miMapa.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+
+                                int padding = 20;
+                                LatLngBounds bounds = builder.build();
+                                cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+                                miMapa.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+                                    @Override
+                                    public void onMapLoaded() {
+                                        miMapa.animateCamera(cu);
+                                    }
+                                });
+
+                            }
+                        });
+
+                    }
+                };
+
+                Thread t3 = new Thread(hiloCargaCalor);
+                t3.start();
+                break;
         }
 
     }
