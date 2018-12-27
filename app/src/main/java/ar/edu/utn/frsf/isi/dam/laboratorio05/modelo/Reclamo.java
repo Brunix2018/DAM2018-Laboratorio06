@@ -16,6 +16,10 @@ public class Reclamo {
     private Double longitud;
     private String reclamo;
     private String email;
+    private String foto="";
+    private String audio="";
+
+
     @TypeConverters(TipoReclamoConverter.class)
     private TipoReclamo tipo;
 
@@ -66,4 +70,12 @@ public class Reclamo {
     public void setId(long id) {
         this.id = id;
     }
+
+    public String getFoto() {return foto;}
+
+    public String getAudio() {return audio;}
+
+    public void setFoto(String foto) {this.foto = foto;}
+
+    public void setAudio(String audio) {this.audio = audio;}
 }

@@ -1,8 +1,14 @@
 package ar.edu.utn.frsf.isi.dam.laboratorio05;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.FileProvider;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,6 +16,11 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import com.google.android.gms.maps.model.LatLng;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 // AGREGAR en MapaFragment una interface MapaFragment.OnMapaListener con el método coordenadasSeleccionadas 
@@ -19,6 +30,9 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         NuevoReclamoFragment.OnNuevoLugarListener, MapaFragment.OnMapaListener, BuscarPorTipoFragment.OnTipoBusquedaListener {
     private DrawerLayout drawerLayout;
     private NavigationView navView;
+    static final int REQUEST_IMAGE_SAVE = 2;
+    private String pathFoto;
+    private LatLng lat;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,6 +175,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
                 ((NuevoReclamoFragment) fragment).setListener(MainActivity.this);
             }
             Bundle bundle = new Bundle();
+            lat=c;
             bundle.putString("latLng",c.latitude+";"+c.longitude);
             fragment.setArguments(bundle);
             getSupportFragmentManager()
@@ -209,6 +224,39 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
         }
 
+    @Override
+    public void sacarFoto() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "com.example.android.fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_SAVE);
+            }
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+        pathFoto = image.getAbsolutePath();
+        return image;
+    }
+
 
     @Override
     public void mostrarBusquedaTipo(String tipoReclamo) {
@@ -234,4 +282,25 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
                 .addToBackStack(null)
                 .commit();
     }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_SAVE && resultCode == RESULT_OK) {
+
+            String tag = "nuevoReclamoFragment";
+            Fragment fragment =  getSupportFragmentManager().findFragmentByTag(tag);
+            if(fragment==null) {
+                fragment = new NuevoReclamoFragment();
+                //((NuevoReclamoFragment) fragment).setListener(listenerReclamo);
+                ((NuevoReclamoFragment) fragment).setListener(MainActivity.this);
+            }
+            ((NuevoReclamoFragment) fragment).setPathFoto(pathFoto);
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.contenido, fragment,tag)
+                    .commitAllowingStateLoss();
+
+        }
+    }
+
+
 }
