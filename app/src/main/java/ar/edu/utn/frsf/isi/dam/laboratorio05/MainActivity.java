@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
                                     ((MapaFragment) fragment).setListener(MainActivity.this);
                                 }
                                 Bundle args = new Bundle();
-                                args.putInt("tipo_mapa",2);
+                                args.putInt("tipo_mapa",4);
                                 fragment.setArguments(args);
 
 
