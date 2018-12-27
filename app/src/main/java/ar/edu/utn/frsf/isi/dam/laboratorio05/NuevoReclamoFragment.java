@@ -1,18 +1,30 @@
 package ar.edu.utn.frsf.isi.dam.laboratorio05;
 
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import java.io.File;
+import java.io.IOException;
 
 import ar.edu.utn.frsf.isi.dam.laboratorio05.modelo.MyDatabase;
 import ar.edu.utn.frsf.isi.dam.laboratorio05.modelo.Reclamo;
@@ -31,6 +43,13 @@ public class NuevoReclamoFragment extends Fragment {
     private TextView tvCoord;
     private Button buscarCoord;
     private Button btnGuardar;
+    private ImageView foto;
+    private Button btnSacarFoto;
+    private Button btnGrabarAudio;
+    private Button btnReproducirAudio;
+    private String pathFoto="";
+
+
 
 
     /************** OnNuevoLugarListener *********************/
@@ -38,6 +57,7 @@ public class NuevoReclamoFragment extends Fragment {
 
     public interface OnNuevoLugarListener {
         public void obtenerCoordenadas();
+        public void sacarFoto();
     }
 
     public OnNuevoLugarListener getListener() {
@@ -74,6 +94,11 @@ public class NuevoReclamoFragment extends Fragment {
         tvCoord= (TextView) v.findViewById(R.id.reclamo_coord);
         buscarCoord= (Button) v.findViewById(R.id.btnBuscarCoordenadas);
         btnGuardar= (Button) v.findViewById(R.id.btnGuardar);
+        btnSacarFoto = (Button) v.findViewById(R.id.btnFoto);
+        foto = (ImageView) v.findViewById(R.id.imageView);
+        btnGrabarAudio= (Button) v.findViewById(R.id.btnGrabarAudio);
+        btnReproducirAudio = (Button) v.findViewById(R.id.btnRproducirAudio);
+
 
         tipoReclamoAdapter = new ArrayAdapter<Reclamo.TipoReclamo>(getActivity(),android.R.layout.simple_spinner_item,Reclamo.TipoReclamo.values());
         tipoReclamoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -82,8 +107,10 @@ public class NuevoReclamoFragment extends Fragment {
         int idReclamo =0;
         if(getArguments()!=null)  {
             idReclamo = getArguments().getInt("idReclamo",0);
+
         }
 
+        cargarFoto();
         cargarReclamo(idReclamo);
 
 
@@ -91,6 +118,9 @@ public class NuevoReclamoFragment extends Fragment {
         reclamoDesc.setEnabled(edicionActivada );
         mail.setEnabled(edicionActivada );
         tipoReclamo.setEnabled(edicionActivada);
+        btnReproducirAudio.setEnabled(edicionActivada);
+        btnGrabarAudio.setEnabled(edicionActivada);
+        btnSacarFoto.setEnabled(true);
         btnGuardar.setEnabled(edicionActivada);
 
         buscarCoord.setOnClickListener(new View.OnClickListener() {
@@ -100,6 +130,25 @@ public class NuevoReclamoFragment extends Fragment {
 
             }
         });
+
+        btnSacarFoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int permissionCheck = ContextCompat.checkSelfPermission(getActivity(),
+                        Manifest.permission.READ_EXTERNAL_STORAGE);
+
+                if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+                    listener.sacarFoto();
+                } else {
+                    ActivityCompat.requestPermissions(getActivity(),
+                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                            2000);
+
+
+                }
+            }
+        });
+
 
         btnGuardar.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -122,6 +171,7 @@ public class NuevoReclamoFragment extends Fragment {
                             mail.setText(reclamoActual.getEmail());
                             tvCoord.setText(reclamoActual.getLatitud()+";"+reclamoActual.getLongitud());
                             reclamoDesc.setText(reclamoActual.getReclamo());
+
                             Reclamo.TipoReclamo[] tipos= Reclamo.TipoReclamo.values();
                             for(int i=0;i<tipos.length;i++) {
                                 if(tipos[i].equals(reclamoActual.getTipo())) {
@@ -174,6 +224,52 @@ public class NuevoReclamoFragment extends Fragment {
         Thread t1 = new Thread(hiloActualizacion);
         t1.start();
     }
+
+
+    private void cargarFoto(){
+        if (!pathFoto.equals("")) {
+            System.out.println("####cargarFoto####");
+            File file = new File(pathFoto);
+            Bitmap imageBitmap = null;
+            try {
+                imageBitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), Uri.fromFile(file));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (imageBitmap != null) {
+                foto.setImageBitmap(imageBitmap);
+            }
+        }else{
+            System.out.println("######PATH VACIO####");
+        }
+    }
+
+    public void setPathFoto(String pathFoto) {
+        this.pathFoto = pathFoto;
+        cargarFoto();
+
+    }
+
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("reclamoDesc", reclamoDesc.getText().toString());
+        outState.putString("mail", mail.getText().toString());
+        outState.putString("tvCoord", tvCoord.getText().toString());
+        outState.putString("pathFoto", pathFoto);
+    }
+
+
+    public void onRestoreInstanceState( Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        reclamoDesc.setText(savedInstanceState.getString("reclamoDesc"));
+        mail.setText(savedInstanceState.getString("mail"));
+        tvCoord.setText(savedInstanceState.getString("tvCoord"));
+        pathFoto=(savedInstanceState.getString("pathFoto"));
+    }
+
+
+
+
 
 
 }
