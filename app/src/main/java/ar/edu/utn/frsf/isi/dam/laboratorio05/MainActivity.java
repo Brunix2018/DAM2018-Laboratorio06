@@ -8,6 +8,7 @@ import android.provider.MediaStore;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.FileProvider;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -290,7 +291,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
             Fragment fragment =  getSupportFragmentManager().findFragmentByTag(tag);
             if(fragment==null) {
                 fragment = new NuevoReclamoFragment();
-                //((NuevoReclamoFragment) fragment).setListener(listenerReclamo);
+
                 ((NuevoReclamoFragment) fragment).setListener(MainActivity.this);
             }
             ((NuevoReclamoFragment) fragment).setPathFoto(pathFoto);
@@ -298,6 +299,8 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
                     .beginTransaction()
                     .replace(R.id.contenido, fragment,tag)
                     .commitAllowingStateLoss();
+
+
 
         }
     }

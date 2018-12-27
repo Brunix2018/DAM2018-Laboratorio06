@@ -11,6 +11,7 @@ import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,7 +48,8 @@ public class NuevoReclamoFragment extends Fragment {
     private Button btnGrabarAudio;
     private Button btnReproducirAudio;
     private String pathFoto="";
-    
+
+
 
 
     /************** OnNuevoLugarListener *********************/
@@ -244,6 +246,30 @@ public class NuevoReclamoFragment extends Fragment {
 
     public void setPathFoto(String pathFoto) {
         this.pathFoto = pathFoto;
+        cargarFoto();
 
     }
+
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("reclamoDesc", reclamoDesc.getText().toString());
+        outState.putString("mail", mail.getText().toString());
+        outState.putString("tvCoord", tvCoord.getText().toString());
+        outState.putString("pathFoto", pathFoto);
+    }
+
+
+    public void onRestoreInstanceState( Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        reclamoDesc.setText(savedInstanceState.getString("reclamoDesc"));
+        mail.setText(savedInstanceState.getString("mail"));
+        tvCoord.setText(savedInstanceState.getString("tvCoord"));
+        pathFoto=(savedInstanceState.getString("pathFoto"));
+    }
+
+
+
+
+
+
 }
