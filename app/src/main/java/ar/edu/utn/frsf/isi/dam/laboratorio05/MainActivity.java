@@ -305,5 +305,23 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         }
     }
 
+    public File createAudioFile(){
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "3gp_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+        File audio = null;
+        try {
+            audio = File.createTempFile(
+                    imageFileName,  /* prefix */
+                    ".3gp",         /* suffix */
+                    storageDir      /* directory */
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return audio;
+    }
+
 
 }
